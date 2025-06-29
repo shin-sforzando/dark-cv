@@ -45,14 +45,14 @@ def enhance(
             rich_help_panel="CLAHE Options",
         ),
     ] = (8, 8),
-    denoise: Annotated[
-        Optional[bool],
+    denoise_method: Annotated[
+        str,
         typer.Option(
-            "--denoise/--no-denoise",
-            help="Enable/disable bilateral filter for noise reduction. (default: Enabled)",
+            "--denoise-method",
+            help="Denoising method to apply: 'none', 'bilateral', 'wavelet', or 'conditional'. (default: 'none')",
             rich_help_panel="Enhancement Options",
         ),
-    ] = None,
+    ] = "none",
     retinex: Annotated[
         Optional[bool],
         typer.Option(
@@ -99,21 +99,27 @@ def enhance(
     typer.echo(f"CPU Cores: {os.cpu_count()}")
 
     if all_combinations:
-        combinations = [
-            # Denoise, Retinex, CLAHE
-            (True, True, True),  # 1. Denoise: ON, Retinex: ON, CLAHE: ON
-            (True, True, False),  # 2. Denoise: ON, Retinex: ON, CLAHE: OFF
-            (True, False, True),  # 3. Denoise: ON, Retinex: OFF, CLAHE: ON
-            (True, False, False),  # 4. Denoise: ON, Retinex: OFF, CLAHE: OFF
-            (False, True, True),  # 5. Denoise: OFF, Retinex: ON, CLAHE: ON
-            (False, True, False),  # 6. Denoise: OFF, Retinex: ON, CLAHE: OFF
-            (False, False, True),  # 7. Denoise: OFF, Retinex: OFF, CLAHE: ON
-        ]
+        denoise_methods = ["none", "bilateral", "wavelet", "conditional"]
+        retinex_options = [True, False]
+        clahe_options = [True, False]
+
+        combinations = []
+        for dm in denoise_methods:
+            for ro in retinex_options:
+                for co in clahe_options:
+                    # Skip combinations where all are off, unless explicitly desired
+                    if dm == "none" and not ro and not co:
+                        continue  # Skip "none, False, False" combination
+                    combinations.append((dm, ro, co))
 
         with typer.progressbar(
             combinations, label="Processing Combinations"
         ) as progress:
-            for i, (d, r, c) in enumerate(progress):
+            for i, (
+                current_denoise_method,
+                current_retinex,
+                current_clahe,
+            ) in enumerate(progress):
                 typer.echo(
                     typer.style(
                         f"\n--- Running Combination {i + 1} / {len(combinations)} ---",
@@ -121,9 +127,6 @@ def enhance(
                         bold=True,
                     )
                 )
-                current_denoise = d
-                current_retinex = r
-                current_clahe = c
 
                 # Generate unique output path for each combination
                 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -133,7 +136,7 @@ def enhance(
                     output_path=None,  # Let _run_enhancement generate the path
                     clip_limit=clip_limit,
                     tile_grid_size=tile_grid_size,
-                    denoise=current_denoise,
+                    denoise_method=current_denoise_method,
                     retinex=current_retinex,
                     clahe=current_clahe,
                     compare=compare,
@@ -145,7 +148,7 @@ def enhance(
             output_path=output_path,
             clip_limit=clip_limit,
             tile_grid_size=tile_grid_size,
-            denoise=denoise,
+            denoise_method=denoise_method,
             retinex=retinex,
             clahe=clahe,
             compare=compare,
@@ -161,7 +164,7 @@ def _run_enhancement(
     output_path: Optional[Path],
     clip_limit: float,
     tile_grid_size: Tuple[int, int],
-    denoise: Optional[bool],
+    denoise_method: str,
     retinex: Optional[bool],
     clahe: Optional[bool],
     compare: bool,
@@ -171,14 +174,14 @@ def _run_enhancement(
     Helper function to run a single enhancement process.
     """
     # Determine actual boolean values for processing
-    actual_denoise = True if denoise is None else denoise
+    actual_denoise_method = denoise_method
     actual_retinex = True if retinex is None else retinex
     actual_clahe = True if clahe is None else clahe
 
     # Generate combination postfix based on actual applied processes
     postfix_parts = []
-    if actual_denoise:
-        postfix_parts.append("D")
+    if actual_denoise_method != "none":
+        postfix_parts.append(actual_denoise_method[0].upper())
     if actual_retinex:
         postfix_parts.append("R")
     if actual_clahe:
@@ -209,8 +212,10 @@ def _run_enhancement(
 
     typer.echo(
         typer.style(
-            f"Denoising (Bilateral Filter): {'Enabled' if actual_denoise else 'Disabled'}",
-            fg=typer.colors.BRIGHT_YELLOW if actual_denoise else typer.colors.WHITE,
+            f"Denoising Method: {actual_denoise_method.capitalize()}",
+            fg=typer.colors.BRIGHT_YELLOW
+            if actual_denoise_method != "none"
+            else typer.colors.WHITE,
         )
     )
     typer.echo(
@@ -234,7 +239,7 @@ def _run_enhancement(
         str(output_path),
         clip_limit=clip_limit,
         tile_grid_size=tile_grid_size,
-        denoise=actual_denoise,
+        denoise_method=actual_denoise_method,
         use_retinex=actual_retinex,
         use_clahe=actual_clahe,
     )
@@ -242,8 +247,8 @@ def _run_enhancement(
     # Create comparison image if requested
     if compare:
         caption_params = []
-        if actual_denoise:
-            caption_params.append("Denoise")
+        if actual_denoise_method != "none":
+            caption_params.append(f"Denoise({actual_denoise_method})")
         if actual_retinex:
             caption_params.append("Retinex")
         if actual_clahe:

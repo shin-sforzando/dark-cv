@@ -3,13 +3,11 @@ import cv2
 import numpy as np
 import time
 from retinex import msrcr
-
-
-def apply_bilateral_filter(image: np.ndarray) -> np.ndarray:
-    """
-    Applies a bilateral filter for noise reduction while preserving edges.
-    """
-    return cv2.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
+from dark_cv.denoiser import (
+    apply_bilateral_filter,
+    apply_wavelet_denoise,
+    apply_conditional_denoise,
+)
 
 
 def enhance_dark_image(
@@ -17,7 +15,7 @@ def enhance_dark_image(
     output_path: str,
     clip_limit: float = 2.0,
     tile_grid_size: tuple = (8, 8),
-    denoise: bool = False,
+    denoise_method: str = "none",  # "bilateral", "wavelet", "conditional", "none"
     use_retinex: bool = False,
     use_clahe: bool = True,
 ) -> float:
@@ -48,8 +46,12 @@ def enhance_dark_image(
         processed_image = cv_image.copy()
 
         # 2. Apply Denoising (if enabled) - typically before contrast enhancement
-        if denoise:
+        if denoise_method == "bilateral":
             processed_image = apply_bilateral_filter(processed_image)
+        elif denoise_method == "wavelet":
+            processed_image = apply_wavelet_denoise(processed_image)
+        elif denoise_method == "conditional":
+            processed_image = apply_conditional_denoise(processed_image)
 
         # 3. Apply Retinex (if enabled)
         if use_retinex:

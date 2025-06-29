@@ -3,10 +3,14 @@
         "CLAHE",
         "darkcv",
         "denoise",
+        "denoised",
         "Denoising",
         "MSRCR",
         "opencv",
+        "pywavelets",
+        "pywt",
         "retinex",
+        "thresholding",
         "Typer",
         "venv"
     ]

@@ -10,6 +10,7 @@ dependencies = [
     "pillow<11",
     "retinex>=0.0.1",
     "typer>=0.16.0",
+    "pywavelets>=1.8.0",
 ]
 
 [tool.uv]

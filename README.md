@@ -2,20 +2,19 @@
 
 A tool to enhance images taken in dark environments.
 
-- [Examples](#examples)
+- [Outputs](#outputs)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
   - [Options](#options)
-  - [Examples](#examples-1)
+  - [Examples](#examples)
   - [Output File Naming](#output-file-naming)
 - [Current Image Processing Flow](#current-image-processing-flow)
 
-## Examples
+## Outputs
 
-![Image](https://github.com/user-attachments/assets/2838653e-103f-4cfb-b9e2-45ff8f1dc7ef)
-![Image](https://github.com/user-attachments/assets/28f63732-3a7a-42fa-a1bd-217b9c62405d)
+![Image](https://github.com/user-attachments/assets/951cfef9-4c56-4b8e-951d-2bb62775297f)
 
 ## Getting Started
 
@@ -63,11 +62,11 @@ uv run python main.py enhance input_image.jpg
 - `--output-path <PATH>`: Specify the path to save the enhanced image. If not provided, a timestamped filename will be generated.
 - `--clip-limit <FLOAT>`: Threshold for CLAHE contrast limiting (default: `2.0`).
 - `--tile-grid-size <INT> <INT>`: Size of the grid for CLAHE histogram equalization (default: `8 8`).
-- `--denoise / --no-denoise`: Enable/disable bilateral filter for noise reduction (default: Enabled).
+- `--denoise-method <METHOD>`: Specify the denoising method to apply. Options are `none`, `bilateral`, `wavelet`, or `conditional` (default: `none`).
 - `--retinex / --no-retinex`: Enable/disable Multi-Scale Retinex with Color Restoration (MSRCR) (default: Enabled).
 - `--clahe / --no-clahe`: Enable/disable CLAHE (default: Enabled).
 - `--compare / --no-compare`: Create a side-by-side comparison image of original and enhanced (default: Enabled).
-- `--all-combinations`: Run all 7 combinations of Denoise, Retinex, and CLAHE.
+- `--all-combinations`: Run all combinations of Denoise methods, Retinex, and CLAHE.
 
 ### Examples
 
@@ -77,10 +76,10 @@ uv run python main.py enhance input_image.jpg
 uv run python main.py enhance path/to/your/image.jpg
 ```
 
-**Enhancement with specific CLAHE parameters and no Denoise:**
+**Enhancement with specific CLAHE parameters and Wavelet Denoise:**
 
 ```bash
-uv run python main.py enhance path/to/your/image.jpg --clip-limit 3.0 --tile-grid-size 10 10 --no-denoise
+uv run python main.py enhance path/to/your/image.jpg --clip-limit 3.0 --tile-grid-size 10 10 --denoise-method wavelet
 ```
 
 **Run all combinations and generate comparison images:**
@@ -100,7 +99,7 @@ Where:
 
 - `input_stem`: The original filename without its extension.
 - `timestamp`: The current timestamp in `YYYYMMDDHHMMSS` format.
-- `COMBINATION`: A postfix indicating the applied enhancement combination (e.g., `D` for Denoise, `R` for Retinex, `C` for CLAHE, `DRC` for all three, `None` if no enhancements are applied).
+- `COMBINATION`: A postfix indicating the applied enhancement combination (e.g., `B` for Bilateral Denoise, `W` for Wavelet Denoise, `C` for Conditional Denoise, `R` for Retinex, `C` for CLAHE, `BRC` for Bilateral Denoise, Retinex, and CLAHE, `None` if no enhancements are applied).
 - `suffix`: The original file extension.
 
 ## Current Image Processing Flow
@@ -110,8 +109,17 @@ The tool processes images through an optional sequence of Denoising, Retinex, an
 ```mermaid
 graph TD
     A(["Input Image"]) --> B["Load and Convert to OpenCV BGR"]
-    B --> C["Optional: Denoising (Bilateral Filter)"]
-    C --> D["Optional: Retinex (MSRCR)"]
+    B --> C{"Optional: Denoising"}
+    C -- "No Denoise" --> D["Optional: Retinex (MSRCR)"]
+
+    C -- "Method: Bilateral" --> C1[Bilateral Filter]
+    C -- "Method: Wavelet" --> C2[Wavelet Denoise]
+    C -- "Method: Conditional" --> C3[Conditional Denoise]
+
+    C1 --> D
+    C2 --> D
+    C3 --> D
+
     D --> E["Optional: CLAHE"]
     E --> F["Save Enhanced Image"]
     F --> G["Optional: Generate Comparison Image"]
@@ -141,3 +149,16 @@ graph TD
 > CLAHE is an advanced form of histogram equalization that operates on small regions of the image, called tiles, rather than the entire image.
 > This local approach helps to enhance contrast in specific areas without over-enhancing noise or creating unnatural artifacts in other parts of the image.
 > It's particularly effective for improving the visibility of details in dark or low-contrast images.
+
+> [!NOTE]
+> **Wavelet Denoising**
+> Wavelet transform decomposes an image into different frequency components.
+> Noise is primarily found in high-frequency components.
+> By applying thresholding to these high-frequency coefficients and then reconstructing the image, noise can be effectively removed while preserving edges and fine details.
+> This method is particularly effective for various types of noise and offers good edge preservation.
+
+> [!NOTE]
+> **Conditional Denoising**
+> Conditional denoising applies noise reduction selectively to specific regions of an image, typically flat areas with minimal edge information.
+> This approach prevents the blurring of important edges and textures that might occur with global denoising.
+> It often involves an initial step of edge detection or texture analysis to create a mask, followed by applying a denoising filter only to the masked non-edge regions.

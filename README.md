@@ -2,17 +2,18 @@
 
 A tool to enhance images taken in dark environments.
 
-- [Outputs](#outputs)
+- [Examples](#examples)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
   - [Options](#options)
-  - [Examples](#examples)
+  - [Examples](#examples-1)
   - [Output File Naming](#output-file-naming)
 - [Current Image Processing Flow](#current-image-processing-flow)
+- [License](#license)
 
-## Outputs
+## Examples
 
 ![Image](https://github.com/user-attachments/assets/951cfef9-4c56-4b8e-951d-2bb62775297f)
 
@@ -22,11 +23,12 @@ A tool to enhance images taken in dark environments.
 
 - Python 3.11+
 - [uv](https://github.com/astral-sh/uv) - Python Environment Manager
+  - [OpenCV](https://opencv.org) - CV Library
+  - [pre-commit](https://pre-commit.com) - Git Hooks Manager
+  - [PyWavelets](https://pywavelets.readthedocs.io/en/latest/) - Wavelet Transform Library
   - [Ruff](https://github.com/astral-sh/ruff) - Linter & Formatter
   - [ty](https://github.com/davidvujic/ty) - Type Checker
-  - [pre-commit](https://pre-commit.com) - Git Hooks Manager
   - [Typer](https://typer.tiangolo.com) - CLI Framework
-  - [OpenCV](https://opencv.org) - CV Library
 
 ### Installation
 
@@ -152,13 +154,12 @@ graph TD
 
 > [!NOTE]
 > **Wavelet Denoising**
-> Wavelet transform decomposes an image into different frequency components.
-> Noise is primarily found in high-frequency components.
-> By applying thresholding to these high-frequency coefficients and then reconstructing the image, noise can be effectively removed while preserving edges and fine details.
-> This method is particularly effective for various types of noise and offers good edge preservation.
+> Wavelet transform decomposes an image into different frequency components. Noise is primarily found in high-frequency components. By applying thresholding to these high-frequency coefficients and then reconstructing the image, noise can be effectively removed while preserving edges and fine details. This method is particularly effective for various types of noise and offers good edge preservation.
 
 > [!NOTE]
 > **Conditional Denoising**
-> Conditional denoising applies noise reduction selectively to specific regions of an image, typically flat areas with minimal edge information.
-> This approach prevents the blurring of important edges and textures that might occur with global denoising.
-> It often involves an initial step of edge detection or texture analysis to create a mask, followed by applying a denoising filter only to the masked non-edge regions.
+> Conditional denoising applies noise reduction selectively to specific regions of an image, typically flat areas with minimal edge information. This approach prevents the blurring of important edges and textures that might occur with global denoising. It often involves an initial step of edge detection or texture analysis to create a mask, followed by applying a denoising filter only to the masked non-edge regions.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.

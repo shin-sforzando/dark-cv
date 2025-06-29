@@ -287,3 +287,4 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/osx,windows,linux,python,opencv,data,visualstudiocode
 
 ### Project Specific ###
+*_darkcv_*

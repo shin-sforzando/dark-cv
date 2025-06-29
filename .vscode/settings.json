@@ -1,8 +1,12 @@
 {
     "cSpell.words": [
         "CLAHE",
+        "darkcv",
         "denoise",
+        "Denoising",
+        "MSRCR",
         "opencv",
+        "retinex",
         "Typer",
         "venv"
     ]

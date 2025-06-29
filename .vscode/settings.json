@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "CLAHE",
+        "denoise",
         "opencv",
         "Typer",
         "venv"

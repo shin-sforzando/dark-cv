@@ -1,6 +1,6 @@
 # Dark CV
 
-A Python project to enhance images taken in dark environments.
+A tool to enhance images taken in dark environments.
 
 ## Getting Started
 
